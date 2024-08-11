@@ -6,7 +6,7 @@ kudos to https://github.com/florin-dumitrescu/accurate-search
 
 You can use this class in a similar way to the JavaScript
 
-'''
+ ```
 
 # Create an instance of AccurateSearch
 search = AccurateSearch()
@@ -27,4 +27,4 @@ for id in results:
 suggestions = search.suggestions('mar', 5)
 print(suggestions)
 
-'''
+ ```
