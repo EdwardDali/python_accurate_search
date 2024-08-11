@@ -4,7 +4,7 @@ from typing import List, Dict, Set, Tuple
 class AccurateSearch:
     def __init__(self):
         self.c: List[Dict] = []
-        self.t: Dict = {"d": {}, "i": [], "n": {}}
+        self.t: Dict = None  # Initialize to None, create only when needed
 
     def add_text(self, id: int, text: str, distance_behind: int = 0):
         if id is None:
@@ -15,11 +15,13 @@ class AccurateSearch:
             last_space = cleaned_text.rfind(" ", 0, 1000)
             cleaned_text = cleaned_text[:last_space]
 
-        self.c.append({"i": id, "t": cleaned_text})
+        self._insert_sorted({"i": id, "t": cleaned_text}, self.c)
         words = cleaned_text.split()
 
-        distance_behind = min(distance_behind, 1000)
-        distance_behind = int(distance_behind)
+        if self.t is None:
+            self.t = {"d": {}, "i": [], "n": {}}
+
+        distance_behind = min(int(distance_behind), 1000)
 
         for word in words:
             node = self.t
@@ -51,7 +53,7 @@ class AccurateSearch:
         if not self.t:
             raise ValueError("There is no text added to search index")
 
-        results: Dict[int, List[int]] = {}
+        results: Dict[int, List[float]] = {}
         visited: Dict[str, Set[int]] = {}
 
         for word in words:
@@ -64,8 +66,7 @@ class AccurateSearch:
                 else:
                     self._process_word(word, node, results, visited, 4)
 
-        sorted_results = self._sort_results(results)
-        return sorted_results
+        return self._sort_results(results)
 
     def fuzzy_search(self, query: str) -> List[int]:
         cleaned_query = self.full_cleanup_text(query)
@@ -97,7 +98,8 @@ class AccurateSearch:
 
     def remove(self, id: int):
         self.c = [item for item in self.c if item["i"] != id]
-        self._remove_from_tree(id, self.t)
+        if self.t:
+            self._remove_from_tree(id, self.t)
 
     def cleanup_text(self, text: str) -> str:
         text = re.sub(r'<[^>]*>?', ' ', text)
@@ -111,7 +113,7 @@ class AccurateSearch:
         text = re.sub(r'[^a-z0-9 ]', ' ', text)
         return text.strip()
 
-    def _process_word(self, word: str, node: Dict, results: Dict[int, List[int]], visited: Dict[str, Set[int]], score: int):
+    def _process_word(self, word: str, node: Dict, results: Dict[int, List[float]], visited: Dict[str, Set[int]], score: float):
         if word not in visited:
             visited[word] = set()
 
@@ -124,9 +126,9 @@ class AccurateSearch:
                 results[id][1] += node["d"][id]
 
         for char, child_node in node["n"].items():
-            self._process_word(word, child_node, results, visited, max(score // 2, 1))
+            self._process_word(word, child_node, results, visited, max(score / 2, 1))
 
-    def _sort_results(self, results: Dict[int, List[int]]) -> List[int]:
+    def _sort_results(self, results: Dict[int, List[float]]) -> List[int]:
         sorted_results = sorted(results.items(), key=lambda x: (x[1][0], x[1][1]))
         return [id for id, _ in sorted_results]
 
@@ -138,3 +140,22 @@ class AccurateSearch:
 
         for child_node in node["n"].values():
             self._remove_from_tree(id, child_node)
+
+    @staticmethod
+    def _insert_sorted(item: Dict, arr: List[Dict]):
+        low, high = 0, len(arr) - 1
+        while low <= high:
+            mid = (low + high) // 2
+            if AccurateSearch._compare_items(item, arr[mid]) > 0:
+                low = mid + 1
+            else:
+                high = mid - 1
+        arr.insert(low, item)
+
+    @staticmethod
+    def _compare_items(a: Dict, b: Dict) -> int:
+        if 'r' in a:
+            return -1 if 'r' in b else -1
+        if 'r' in b:
+            return 1
+        return a['i'] - b['i']
