@@ -2,7 +2,7 @@
 port of accurate search in python
 
 
-Port of https://github.com/florin-dumitrescu/accurate-search in python
+kudos to https://github.com/florin-dumitrescu/accurate-search 
 
 You can use this class in a similar way to the JavaScript
 
