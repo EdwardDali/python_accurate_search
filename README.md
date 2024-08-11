@@ -8,23 +8,25 @@ You can use this class in a similar way to the JavaScript
 
  ```
 
-# Create an instance of AccurateSearch
+# Test the AccurateSearch class
 search = AccurateSearch()
 
-# Add some movies to the search index
-movies = ['The Lighthouse', 'Marriage Story', 'The Irishman', 'Parasite']
+# Add some movies
+movies = ['The Lighthouse', 'Marriage Story', 'The Irishman', 'Parasite', 'Little Women']
 for i, movie in enumerate(movies):
     search.add_text(i, movie)
 
-# Perform a search
-results = search.search('the')
+# Test search
+assert search.search('the') == [0, 2], "Search for 'the' failed"
+assert search.search('woman') == [4], "Search for 'woman' failed"
 
-# Print the results
-for id in results:
-    print(movies[id])
+# Test suggestions
+assert search.suggestions('ma', 2) == ['marriage'], "Suggestions for 'ma' failed"
 
-# Get suggestions
-suggestions = search.suggestions('mar', 5)
-print(suggestions)
+# Test remove
+search.remove(2)
+assert search.search('the') == [0], "Remove and search for 'the' failed"
+
+print("All tests passed!")
 
  ```
